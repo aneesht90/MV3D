@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 TF_INC=$(python -c 'import tensorflow as tf; print(tf.sysconfig.get_include())')
 TF_LIB=$(python -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')
-echo $TF_INC
+TF_PACKAGES=$(python -c 'import tensorflow as tf; import os; print(os.path.split(tf.sysconfig.get_lib())[0])')
+TF_NSYNC=$TF_PACKAGES/external/nsync/public/
+echo $TF_NSYNC
 
 
 
@@ -18,9 +20,8 @@ nvcc -std=c++11 -c -o roi_pooling_op.cu.o roi_pooling_op_gpu.cu.cc \
 
 # for gcc5-built tf
 g++ -std=c++11 -shared -D_GLIBCXX_USE_CXX11_ABI=0 -o roi_pooling.so roi_pooling_op.cc \
-	roi_pooling_op.cu.o -I $TF_INC -fPIC -lcudart \
-	 -I /home/aneesh/dfki_virtual/lib/python3.5/site-packages/tensorflow/include/external/nsync/public \
-	  -L $TF_LIB -ltensorflow_framework -L $CUDA_PATH/lib64
+	roi_pooling_op.cu.o -I $TF_INC -I $TF_NSYNC -fPIC -lcudart  \
+	-L $TF_LIB -ltensorflow_framework -L $CUDA_PATH/lib64
 cd ..
 
 
@@ -30,14 +31,12 @@ nvcc -std=c++11 -c -o psroi_pooling_op.cu.o psroi_pooling_op_gpu.cu.cc \
 	-I $TF_INC -D GOOGLE_CUDA=1 -x cu -Xcompiler -fPIC -arch=sm_61
 
 g++ -std=c++11 -shared -o psroi_pooling.so psroi_pooling_op.cc \
-	psroi_pooling_op.cu.o -I $TF_INC -fPIC -lcudart \
-	 -I /home/aneesh/dfki_virtual/lib/python3.5/site-packages/tensorflow/include/external/nsync/public \
-	   -L $TF_LIB -ltensorflow_framework -L $CUDA_PATH/lib64
+	psroi_pooling_op.cu.o -I $TF_INC -I $TF_NSYNC -fPIC -lcudart \
+	-L $TF_LIB -ltensorflow_framework -L $CUDA_PATH/lib64
 
 ## if you install tf using already-built binary, or gcc version 4.x, uncomment the two lines below
 g++ -std=c++11 -shared -D_GLIBCXX_USE_CXX11_ABI=0 -o psroi_pooling.so psroi_pooling_op.cc \
-	psroi_pooling_op.cu.o -I $TF_INC -fPIC -lcudart \
-	 -I /home/aneesh/dfki_virtual/lib/python3.5/site-packages/tensorflow/include/external/nsync/public \
+	psroi_pooling_op.cu.o -I $TF_INC -I $TF_NSYNC -fPIC -lcudart  \
 	-L $TF_LIB -ltensorflow_framework -L $CUDA_PATH/lib64
 
 cd ..
