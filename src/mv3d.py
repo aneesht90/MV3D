@@ -110,11 +110,12 @@ class Net(object):
 
     def get_variables(self, scope_names):
         variables=[]
+        print("printing the current scope name:",scope_names)
         for scope in scope_names:
-            variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+            variables += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
             assert len(variables) != 0
-            variables += variables
         return variables
+        
 
 
 class MV3D(object):
@@ -261,9 +262,9 @@ class MV3D(object):
 
         # all prediction on top
         probs, boxes3d = rcnn_nms(self.fuse_probs, self.fuse_deltas,self.rois3d, score_threshold=0.)
-        fusion_proposal_top = data.draw_box3d_on_top(self.top_image, boxes3d,scores=probs,thickness=0)
+        fusion_proposal_top = data.draw_box3d_on_top(self.top_image, boxes3d,scores=probs,thickness=1)
         prediction_top = data.draw_box3d_on_top(self.top_image, self.boxes3d, scores=self.probs,
-                                                     thickness=0)
+                                                     thickness=1)
         # add fusion loss text
         text = ''
         if loss != None: text += 'loss c: %6f r: %6f' % loss
@@ -498,7 +499,7 @@ class Trainer(MV3D):
         self.val_summary_writer = None
         self.tensorboard_dir = None
         self.summ = None
-        self.iter_debug = 600
+        self.iter_debug = 10
         self.n_global_step = 0
         self.validation_step = 40
         self.ckpt_save_step = 2000
@@ -792,6 +793,7 @@ class Trainer(MV3D):
         self.batch_gt_labels, self.batch_gt_boxes3d, self.frame_id = \
             data_set.load()
 
+        #print("fit iteration is being called, status of log_image:%r "%log_image)
         # fit_iterate log init
         if log_image:
             self.time_str = strftime("%Y_%m_%d_%H_%M", localtime())
